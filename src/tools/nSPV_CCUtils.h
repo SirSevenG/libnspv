@@ -198,3 +198,4 @@ bool IsPayToCryptoCondition(cstring *script)
 }
 
 #endif // NSPV_CCUTILS_H
+

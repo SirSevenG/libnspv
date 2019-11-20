@@ -539,11 +539,19 @@ cJSON *NSPV_gettransaction2(btc_spv_client *client,bits256 txid,int32_t v,int32_
         jaddstr(result,"result","error");
         jaddstr(result,"error","could not get tx.");
     }
-    cstring *txhex = btc_tx_to_cstr(tx);
-    jaddstr(result, "hex", txhex->str);
-    jaddnum(result, "retcode", (int64_t)retval);
-    if (rewardsum > 0 )
-        jaddnum(result, "rewards", (int64_t)rewardsum);
+    else
+    {
+        cstring *txhex = btc_tx_to_cstr(tx);
+        if ( txhex != 0 )
+        {
+            jaddstr(result, "hex", txhex->str);
+            cstr_free(txhex, true);
+        }
+        else jaddstr(result, "hex", "couldnt decode tx");
+        jaddnum(result, "retcode", (int64_t)retval);
+        if (rewardsum > 0 )
+            jaddnum(result, "rewards", (int64_t)rewardsum);
+    }
     return(result);
 }
 

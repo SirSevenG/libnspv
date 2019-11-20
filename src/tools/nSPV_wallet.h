@@ -352,7 +352,7 @@ int32_t NSPV_vinselect(int32_t *aboveip,int64_t *abovep,int32_t *belowip,int64_t
 
 int64_t NSPV_addinputs(struct NSPV_utxoresp *used,btc_tx *mtx,int64_t total,int32_t maxinputs,struct NSPV_utxoresp *ptr,int32_t num)
 {
-    int32_t abovei,belowi,ind,vout,i,n = 0; int64_t threshold,above,below; int64_t remains,totalinputs = 0; struct NSPV_utxoresp utxos[NSPV_MAXVINS+16],*up;
+    int32_t abovei,belowi,ind,vout,i,n = 0; int64_t threshold,above,below; int64_t remains,totalinputs = 0; struct NSPV_utxoresp utxos[NSPV_MAXVINS],*up;
     memset(utxos,0,sizeof(utxos));
     if ( maxinputs > NSPV_MAXVINS )
         maxinputs = NSPV_MAXVINS;
@@ -361,11 +361,13 @@ int64_t NSPV_addinputs(struct NSPV_utxoresp *used,btc_tx *mtx,int64_t total,int3
     else threshold = total;
     for (i=0; i<num; i++)
     {
-        if ( num <= NSPV_MAXVINS || ptr[i].satoshis > threshold )
+        if ( ptr[i].satoshis > threshold )
             utxos[n++] = ptr[i];
+        if ( n >= maxinputs )
+            break;
     }
     remains = total;
-    //fprintf(stderr,"threshold %.8f n.%d for total %.8f\n",(double)threshold/COIN,n,(double)total/COIN);
+//fprintf(stderr,"threshold %.8f n.%d num.%d for total %.8f, maxvins.%d NSPV_MAXVINS.%d\n",(double)threshold/COIN,num,n,(double)total/COIN,maxinputs,NSPV_MAXVINS);
     for (i=0; i<maxinputs && n>0; i++)
     {
         below = above = 0;
@@ -383,7 +385,7 @@ int64_t NSPV_addinputs(struct NSPV_utxoresp *used,btc_tx *mtx,int64_t total,int3
             fprintf(stderr,"error finding unspent i.%d of %d, %.8f vs %.8f, abovei.%d belowi.%d ind.%d\n",i,n,(double)remains/COIN,(double)total/COIN,abovei,belowi,ind);
             return(0);
         }
-        //fprintf(stderr,"i.%d ind.%d abovei.%d belowi.%d n.%d\n",i,ind,abovei,belowi,n);
+//fprintf(stderr,"i.%d ind.%d abovei.%d belowi.%d n.%d\n",i,ind,abovei,belowi,n);
         up = &utxos[ind];
         btc_tx_add_txin(mtx,up->txid,up->vout);
         used[i] = *up;
@@ -391,7 +393,7 @@ int64_t NSPV_addinputs(struct NSPV_utxoresp *used,btc_tx *mtx,int64_t total,int3
         remains -= up->satoshis;
         utxos[ind] = utxos[--n];
         memset(&utxos[n],0,sizeof(utxos[n]));
-        //fprintf(stderr,"totalinputs %.8f vs total %.8f i.%d vs max.%d\n",(double)totalinputs/COIN,(double)total/COIN,i,maxinputs);
+//fprintf(stderr,"totalinputs %.8f vs total %.8f i.%d vs max.%d\n",(double)totalinputs/COIN,(double)total/COIN,i,maxinputs);
         if ( totalinputs >= total || (i+1) >= maxinputs )
             break;
     }

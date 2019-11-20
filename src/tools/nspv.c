@@ -68,7 +68,7 @@ static void print_version()
 static void print_usage()
 {
     print_version();
-    printf("Usage: nspv [COIN defaults to NSPV] (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-t[--testnet]) (-f <headersfile|0 for in mem only>) (-p <rpcport>) (-r[--regtest]) (-d[--debug]) (-x=<externalip>) (-l=langauge) (-s[--timeout] <secs>) <command>\n");
+    printf("Usage: nspv [COIN defaults to NSPV] (-c|continuous) (-i|-ips <ip,ip,...]>) (-m[--maxpeers] <int>) (-t[--testnet]) (-f <headersfile|0 for in mem only>) (-p <rpcport>) (-r[--regtest]) (-d[--debug]) (-x=<externalip>) (-l=language) (-s[--timeout] <secs>) <command>\n");
     printf("Supported commands:\n");
     printf("        scan      (scan blocks up to the tip, creates header.db file)\n");
     printf("\nExamples: \n");
@@ -367,7 +367,13 @@ int main(int argc, char* argv[])
             btc_spv_client_runloop(client);
             printf("end of client runloop\n");
             btc_spv_client_free(client);
+			NSPV_STOP_RECEIVED = (uint32_t)time(NULL);
+#if !defined(__ANDROID__) && !defined(ANDROID)
+			// no pthread_cancel in Android NDK
+			// actually no need to pthread_cancel if NSPV_STOP_RECEIVED is used to finishe the thread, 
+			// it is sufficient just to wait for the thread end in pthread_join
             pthread_cancel(thread); 
+#endif
             ret = EXIT_SUCCESS;
         }
         btc_ecc_stop();
