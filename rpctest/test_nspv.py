@@ -7,6 +7,7 @@ from test_framework.nspvlib import NspvRpcCalls as NRC
 import pytest
 import time
 import json
+import os
 
 """
    Simple unittest based ob pytest framework for libnspv
@@ -21,20 +22,18 @@ import json
 def setup_module():
     global addr_send, wif_real, coin, call, chain_params
 
-    f = open("test_setup.txt", "r")
-    test_setup = json.load(f)
-    f.close()
+    #f = open("test_setup.txt", "r")
+    #test_setup = json.load(f)
+    #f.close()
 
-    wif_real = test_setup.get("wif")
-    addr_send = test_setup.get("address")
+    # wif_real = test_setup.get("wif")
+    wif_real = os.environ.get('WALL')
+    addr_send = os.environ.get('ADDRESS')
+    coin = os.environ.get('CHAIN')
 
     if not addr_send or not wif_real:
-        pytest.exit("Please check test wif and address in test_setup.txt")
+        pytest.exit("Please check test wif and address variables availability")
 
-    url = "http://127.0.0.1:12986"  # set correct port for chosen chain
-    userpass = "userpass"
-    coin = "ILN"
-    call = NRC(url, userpass)
     chain_params = {"KMD": {
                             'tx_list_address': 'RGShWG446Pv24CKzzxjA23obrzYwNbs1kA',
                             'min_chain_height': 1468080,
@@ -47,6 +46,7 @@ def setup_module():
                             'tx_proof_id': 'f7beb36a65bc5bcbc9c8f398345aab7948160493955eb4a1f05da08c4ac3784f',
                             'tx_spent_height': 1456212,
                             'tx_proof_height': '1468520',
+                            'port': '7771',
                            },
                     "ILN": {
                             'tx_list_address': 'RUp3xudmdTtxvaRnt3oq78FJBjotXy55uu',
@@ -60,15 +60,33 @@ def setup_module():
                             'tx_proof_id': '67ffe0eaecd6081de04675c492a59090b573ee78955c4e8a85b8ac0be0e8e418',
                             'tx_spent_height': 2681,
                             'tx_proof_height': '2690',
-                           }
+                            'port': '12986',
+                           },
+                    "HUSH": {
+                             'tx_list_address': 'RCNp322uAXmNo37ipQAEjcGQgBXY9EW9yv',
+                             'min_chain_height': 69951,
+                             'notarization_height': '69900',
+                             'prev_notarization_h': 69800,
+                             'next_notarization_h': 69700,
+                             'hdrs_proof_low': '66100',
+                             'hdrs_proof_high': '66200',
+                             'numhdrs_expected': 123,
+                             'tx_proof_id': '661bae364443948a009fa7f706c3c8b7d3fa6b0b27eca185b075abbe85bbdedc',
+                             'tx_spent_height': 2681,
+                             'tx_proof_height': '2690',
+                             'port': '18031'
+                            }
                     }
+    userpass = "userpass"
+    url = "http://127.0.0.1:" + chain_params.get(coin).get("port")
+    call = NRC(url, userpass)
     call.nspv_logout()
 
 
 def test_help_call():
     """ Response should contain "result": "success"
         Response should contain actual help data"""
-    print("testing help call")
+    print('\n', "testing help call")
     rpc_call = call.nspv_help()
     if not rpc_call:
         pytest.exit("Can't connect daemon")
@@ -78,7 +96,7 @@ def test_help_call():
 
 def test_getpeerinfo_call():
     """Response should not be empty, at least one node should be in sync"""
-    print("testing peerinfo call, checking peers status")
+    print('\n', "testing peerinfo call, checking peers status")
     rpc_call = call.type_convert(call.nspv_getpeerinfo())
     if not rpc_call[0]:
         raise Exception("Empty response :", rpc_call)
@@ -87,11 +105,11 @@ def test_getpeerinfo_call():
 
 def test_check_balance():
     """Check if wif given has actual balance to perform further tests"""
-    print("Checking wif balance")
+    print('\n', "Checking wif balance")
     call.nspv_login(wif_real)
     res = call.type_convert(call.nspv_listunspent())
     amount = res.get("balance")
-    if amount > 0.001:
+    if amount > 0.1:
         pass
     else:
         pytest.exit("Not enough balance, please use another wif")
@@ -100,7 +118,7 @@ def test_check_balance():
 def test_getinfo_call():
     """ Response should contain "result": "success"
         Response should contain actual data"""
-    print("testing getinfo call")
+    print('\n', "testing getinfo call")
     rpc_call = call.nspv_getinfo()
     call.assert_success(rpc_call)
     call.assert_contains(rpc_call, "notarization")
@@ -110,7 +128,7 @@ def test_getinfo_call():
 def test_hdrsproof_call():
     """ Response should be successful for case 2 and fail for others
         Response should contain actual headers"""
-    print("testing hdrsproof call")
+    print('\n', "testing hdrsproof call")
     prevheight = [False, chain_params.get(coin).get("hdrs_proof_low")]
     nextheight = [False, chain_params.get(coin).get("hdrs_proof_high")]
 
@@ -132,7 +150,7 @@ def test_hdrsproof_call():
 def test_notarization_call():
     """ Response should be successful for case 2
      Successful response should contain prev and next notarizations data"""
-    print("testing notarization call")
+    print('\n', "testing notarization call")
     height = [False, chain_params.get(coin).get("notarization_height")]
 
     # Case 1 - False data
@@ -148,7 +166,7 @@ def test_notarization_call():
 
 def getnewaddress_call():
     """ Get a new address, save it for latter calls"""
-    print("testing getnewaddr call")
+    print('\n', "testing getnewaddr call")
     rpc_call = call.nspv_getnewaddress()
     call.assert_contains(rpc_call, "wifprefix")
     call.assert_contains(rpc_call, "wif")
@@ -159,7 +177,7 @@ def getnewaddress_call():
 def test_login_call():
     """"login with fresh credentials
         Response should contain address, address should be equal to generated earlier one"""
-    print("testing log in call")
+    print('\n', "testing log in call")
     global logged_address
     rpc_call = call.nspv_getnewaddress()
     rep = call.type_convert(rpc_call)
@@ -178,7 +196,7 @@ def test_login_call():
 def test_listtransactions_call():
     """"Successful response should [not] contain txids and same address as requested
         Case 1 - False data, user is logged in - should not print txids for new address"""
-    print("testing listtransactions call")
+    print('\n', "testing listtransactions call")
     call.nspv_logout()
     real_addr = chain_params.get(coin).get("tx_list_address")
 
@@ -212,7 +230,7 @@ def test_listtransactions_call():
 
 def test_litunspent_call():
     """ Successful response should [not] contain utxos and same address as requested"""
-    print("testing listunspent call")
+    print('\n', "testing listunspent call")
     call.nspv_logout()
     real_addr = chain_params.get(coin).get("tx_list_address")
 
@@ -246,8 +264,8 @@ def test_litunspent_call():
 
 def test_spend_call():
     """Successful response should contain tx and transaction hex"""
-    print("testing spend call")
-    amount = [False, 0.001]
+    print('\n', "testing spend call")
+    amount = [False, 0.1]
     address = [False, addr_send]
 
     # Case 1 - false data
@@ -271,10 +289,10 @@ def test_spend_call():
 
 def test_broadcast_call():
     """Successful broadcasst should have equal hex broadcasted and expected"""
-    print("testing broadcast call")
+    print('\n', "testing broadcast call")
     call.nspv_logout()
     call.nspv_login(wif_real)
-    rpc_call = call.nspv_spend(addr_send, 0.001)
+    rpc_call = call.nspv_spend(addr_send, 0.1)
     rep = call.type_convert(rpc_call)
     hex_res = rep.get("hex")
     hex = [False, "norealhexhere", hex_res]
@@ -302,15 +320,15 @@ def test_broadcast_call():
 
 def test_mempool_call():
     """ Response should contain txids"""
-    print("testing mempool call")
+    print('\n', "testing mempool call")
     rpc_call = call.nspv_mempool()
     call.assert_success(rpc_call)
-    call.assert_contains(rpc_call, "txids")
+    # call.assert_contains(rpc_call, "txids") - mempool() response not always contains "txids" key, even on success
 
 
 def test_spentinfo_call():
     """Successful response sould contain same txid and same vout"""
-    print("testing spentinfo call")
+    print('\n', "testing spentinfo call")
     r_txids = [False, chain_params.get(coin).get("tx_proof_id")]
     r_vouts = [False, 1]
 
@@ -330,15 +348,43 @@ def test_spentinfo_call():
         raise AssertionError("Unxepected vout: ", r_vouts[1], vout_resp)
 
 
+def test_faucetinfo():
+    """Not implemented call yet"""
+    return True
+
+
+def test_gettransaction():
+    """Not implemented yet"""
+    print('\n', "testing gettransaction call")
+    rpc_call = call.nspv_gettransaction()
+    call.assert_error(rpc_call)
+
+
 def test_autologout():
     """Wif should expeire in 777 seconds"""
-    print("testing auto logout")
+    print('\n', "testing auto logout")
     rpc_call = call.nspv_getnewaddress()
     rep = call.type_convert(rpc_call)
     wif = rep.get('wif')
     rpc_call = call.nspv_login(wif)
     call.assert_success(rpc_call)
     time.sleep(778)
-    rpc_call = call.nspv_spend(addr_send, 0.001)
+    rpc_call = call.nspv_spend(addr_send, 0.1)
     call.assert_error(rpc_call)
-    print("all tests are finished")
+
+
+def test_stop():
+    """Send funds to reset utxo amount in wallet
+       Stop nspv process after tests"""
+    print('\n', "Resending funds")
+    maxfee = 0.01
+    call.nspv_login(wif_real)
+    res = call.type_convert(call.nspv_listunspent())
+    amount = res.get("balance") - maxfee
+    res = call.type_convert(call.nspv_spend(addr_send, amount))
+    hexs = res.get("hex")
+    call.nspv_broadcast(hexs)
+    print('\n', "stopping nspv process")
+    rpc_call = call.nspv_stop()
+    call.assert_success(rpc_call)
+    print('\n', "all tests are finished")

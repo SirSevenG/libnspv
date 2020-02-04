@@ -1,0 +1,346 @@
+name: LibNspvCI
+
+on: 
+  push:
+    branches:
+      - master
+    paths-ignore:
+    - ./README.md
+    tags-ignore:
+    - '*.noci'
+
+jobs:
+  job-build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install deps (Linux)
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get install -q \
+                 libsodium-dev \
+                 curl \
+                 libevent-dev \
+                 cmake \
+                 nano \
+                 wget \
+                 ntp \
+                 ntpdate \
+                 automake \
+                 unzip \
+                 autoconf \
+                 libtool -y
+
+    - name: Build libs (Linux)
+      run: |
+        libdir=$PWD/../libs_build
+        mkdir $libdir
+        cd $libdir
+        wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz
+        tar xvf libsodium-1.0.18.tar.gz
+        cd libsodium-1.0.18
+        ./autogen.sh
+        ./configure --enable-shared=no
+        make
+        cd $libdir
+        wget https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+        tar xvf gmp-6.1.2.tar.bz2
+        cd gmp-6.1.2
+        ./configure --enable-shared=no
+        make
+        cd $libdir
+        wget https://github.com/libevent/libevent/archive/release-2.1.8-stable.tar.gz
+        tar xvf release-2.1.8-stable.tar.gz
+        cd libevent-release-2.1.8-stable
+        ./autogen.sh
+        ./configure --enable-shared=no
+        make
+      
+    - name: Build Nspv (Linux)
+      run: |
+        libdir=$PWD/../libs_build
+        cd src/tools/cryptoconditions
+        ./autogen.sh
+        ./configure --enable-shared=no
+        make
+        cd ../../..
+        ./autogen.sh
+        ./configure --enable-shared=no LDFLAGS="-L$libdir/libsodium-1.0.18/src/libsodium/.libs -lsodium -L$libdir/libevent-release-2.1.8-stable/.libs -levent -L$libdir/gmp-6.1.2/.libs -lgmp"
+        make
+        tar -czvf nspv-linux.tar.gz nspv coins
+
+    - name: Upload nspv-linux.tar.gz as artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: nspv-linux
+        path: ./nspv-linux.tar.gz
+
+  job-test-linux:
+    name: Tests (Linux)
+    runs-on: ubuntu-latest
+    needs: job-build-linux
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Download nspv binary (Linux)
+      uses: actions/download-artifact@v1
+      with:
+        name: nspv-linux
+    - name: Install deps (Linux)
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        sudo apt-get update
+        sudo apt-get install -q \
+                 curl \
+                 python3-dev \
+                 python3-setuptools \
+                 libcurl4-openssl-dev \
+                 libssl-dev -y
+        sudo python3 -m pip install --upgrade pip
+        sudo python3 -m pip install -r ./rpctest/requirements.txt
+
+    - name: Tests (Linux)
+      env:
+        WALL: ${{ secrets.WALL }}
+        ADDRESS: ${{ secrets.ADDRESS }}
+        CHAIN: ${{ secrets.CHAIN }}
+      run: |
+        mv nspv-linux/nspv-linux.tar.gz .
+        tar xzvf nspv-linux.tar.gz
+        python3 ./rpctest/actions.py
+
+
+  job-macos-build:
+    name: Build (MacOS)
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Build (MacOS)
+      run: |
+        brew install libsodium libevent automake autoconf libtool curl
+        
+    - name: Build libs (MacOS)
+      run: |
+        libdir=~/libs_build
+        mkdir $libdir
+        cd $libdir
+        wget https://download.libsodium.org/libsodium/releases/libsodium-1.0.18.tar.gz
+        tar xvf libsodium-1.0.18.tar.gz
+        cd libsodium-1.0.18
+        ./autogen.sh
+        ./configure --enable-shared=no
+        make
+        cd $libdir
+        wget https://gmplib.org/download/gmp/gmp-6.1.2.tar.bz2
+        tar xvf gmp-6.1.2.tar.bz2
+        cd gmp-6.1.2
+        ./configure --enable-shared=no
+        make
+        cd $libdir
+        wget https://github.com/libevent/libevent/archive/release-2.1.8-stable.tar.gz
+        tar xvf release-2.1.8-stable.tar.gz
+        cd libevent-release-2.1.8-stable
+        ./autogen.sh
+        ./configure --enable-shared=no
+        make
+        
+    - name: Build Nspv (MacOS)
+      run: |
+        libdir=~/libs_build
+        cd src/tools/cryptoconditions
+        ./autogen.sh
+        ./configure --enable-shared=no
+        make
+        cd ../../..
+        ./autogen.sh
+        ./configure --enable-shared=no LDFLAGS="-L$libdir/libsodium-1.0.18/src/libsodium/.libs -lsodium -L$libdir/libevent-release-2.1.8-stable/.libs -levent -L$libdir/gmp-6.1.2/.libs -lgmp"
+        make
+        tar -czvf nspv-macos.tar.gz nspv coins
+        
+    - name: Upload nspv-macos.tar.gz as artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: nspv-macos
+        path: ./nspv-macos.tar.gz
+
+  job-macos-test:
+    name: Tests (MacOS)
+    runs-on: macos-latest
+    needs: job-macos-build
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Download nspv binary (MacOS)
+        uses: actions/download-artifact@v1
+        with:
+          name: nspv-macos
+
+      - name: Install deps (MacOS)
+        run: |
+          brew install curl
+          python3 -m pip install --upgrade setuptools
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r ./rpctest/requirements.txt
+
+      - name: Tests (MacOS)
+        env:
+          WALL: ${{ secrets.WALL }}
+          ADDRESS: ${{ secrets.ADDRESS }}
+          CHAIN: ${{ secrets.CHAIN }}
+        run: |
+          mv nspv-macos/nspv-macos.tar.gz .
+          tar xzvf nspv-macos.tar.gz
+          python3 ./rpctest/actions.py
+
+  job-win-build:
+    name: Build (Win)
+    runs-on: ubuntu-18.04
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Build Win on Unix
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install -q \
+                   build-essential \
+                   pkg-config \
+                   libc6-dev \
+                   m4 \
+                   g++-multilib \
+                   autoconf \
+                   libtool \
+                   ncurses-dev \
+                   libffi-dev \
+                   libssl-dev \
+                   subversion \
+                   python-zmq \
+                   zlib1g-dev \
+                   libcurl4-gnutls-dev \
+                   bsdmainutils \
+                   automake \
+                   curl \
+                   cmake \
+                   mingw-w64 \
+                   libevent-2.1-6 \
+                   libevent-pthreads-2.1-6 \
+                   libevent-dev \
+                   libsodium23 \
+                   libsodium-dev \
+                   libgnutls28-dev -y
+          ./build_win.sh
+          curl https://sirseven.me/share/libwinpthread-1.dll -o libwinpthread-1.dll
+          zip --junk-paths nspv-win nspv.exe coins libwinpthread-1.dll
+      - name: Upload nspv-win.zip as artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: nspv-win
+          path: ./nspv-win.zip
+
+  job-win-test:
+    name: Tests (Win)
+    needs: job-win-build
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Win Tests
+        uses: actions/download-artifact@v1
+        with:
+          name: nspv-win
+      - shell: cmd
+        env:
+          WALL: ${{ secrets.WALL }}
+          ADDRESS: ${{ secrets.ADDRESS }}
+          CHAIN: ${{ secrets.CHAIN }}
+        run: |
+          move nspv-win\nspv-win.zip
+          7z e nspv-win.zip
+          python.exe -m pip install --upgrade setuptools
+          python.exe -m pip install --upgrade pip
+          python.exe -m pip install -r rpctest\requirements.txt
+          wintest.bat
+
+  job-release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [job-test-linux, job-win-test, job-macos-test]
+
+    steps:
+      - name: Download Artifacts (Linux)
+        uses: actions/download-artifact@v1
+        with:
+          name: nspv-linux
+      - name: Download Artifacts (Win)
+        uses: actions/download-artifact@v1
+        with:
+          name: nspv-win
+      - name: Download Artifacts (MacOS)
+        uses: actions/download-artifact@v1
+        with:
+          name: nspv-macos
+      - name: Prepare Archives
+        run: |
+          mv nspv-linux/nspv-linux.tar.gz .
+          mv nspv-win/nspv-win.zip .
+          mv nspv-macos/nspv-macos.tar.gz .
+
+      - name: Generate build number  # gen ${{ steps.buildnumber.outputs.build_number }} for release name
+        id: buildnumber
+        uses: einaregilsson/build-number@v1 
+        with:
+          token: ${{secrets.github_token}}        
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.buildnumber.outputs.build_number }}
+          release_name: Build - ${{ github.sha }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset (Linux)
+        id: upload-release-asset-linux
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./nspv-linux.tar.gz
+          asset_name: nspv-linux-${{ github.sha }}.tar.gz
+          asset_content_type: application/tar+gzip
+
+      - name: Upload Release Asset (Win)
+        id: upload-release-asset-win 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./nspv-win.zip
+          asset_name: nspv-win-${{ github.sha }}.zip
+          asset_content_type: application/zip
+
+      - name: Upload Release Asset (MacOS)
+        id: upload-release-asset-macos 
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./nspv-macos.tar.gz
+          asset_name: nspv-macos-${{ github.sha }}.tar.gz
+          asset_content_type: application/tar+gzip

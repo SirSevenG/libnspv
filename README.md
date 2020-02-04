@@ -120,7 +120,7 @@ xcode-select --install
 # Update brew and install dependencies
 brew update
 brew upgrade
-brew install libsodium libevent cmake git wget
+brew install libsodium libevent automake libtool git wget
 ```
 
 ##### Intall using brew
@@ -155,6 +155,7 @@ cd libnspv
 ## Now you can follow the next instructions to compile and update
 
 #### Full library including CLI tool and wallet database
+
 ```
 ./autogen.sh
 ./configure
@@ -162,13 +163,11 @@ make check
 ```
 
 #### Pure library without wallet support
-```
-./autogen.sh
-./configure --disable-wallet --disable-tools
-make check
-```
+
+The nspv client doesn't follow the options `--disable-wallet --disable-tools` as it needs some of the wallet functions as all the nspv API is always supported
 
 #### Updating libnspv
+
 ```shell
 cd libnspv
 git pull
@@ -178,8 +177,10 @@ make
 ```
 
 libnspv does all the above, it also can launch a superlite nSPV client
-./nspv KMD launches a KMD superlite
-./nspv BTC launches the normal libbtc headers only SPV mode
+
+`./nspv KMD` launches a KMD superlite
+
+`./nspv BTC` launches the normal libbtc headers only SPV mode
 
 for superlite clients, it will daemonize the nspv executable and it is accessible via JSON requests sent into the localhost
 rpc port. you can specify any available rpc port with -p <port> option at the end.
@@ -187,13 +188,14 @@ rpc port. you can specify any available rpc port with -p <port> option at the en
 there is a coins JSON file that comes from the https://github.com/jl777/coins/coins which will define the default behavior
 of the superlite if it is a komodo "asset" and also has the following fields:
 
+```
 "p2p": 12985,
 "magic":"feb4cb23",
 "nSPV":"5.9.102.210, 5.9.253.195, 5.9.253.196, 5.9.253.197, 5.9.253.198, 5.9.253.199, 5.9.253.200, 5.9.253.201, 5.9.253.202, 5.9.253.203"
+```
 
-the "p2p" field is the coins peer to peer port, the "magic" is the netmagic of that chain. the decimal value of this can be
-obtained from the getinfo call, convert to hex and serialize it into the 4 hexbytes. if you got the direction wrong, just flip
-it around.
+the "p2p" field is the coin's peer to peer port, the "magic" is the netmagic of that chain. the decimal value of this can be
+obtained from the getinfo call, convert to hex and serialize it into the 4 hexbytes. if you got the direction wrong, just flip it around.
 finally, the "nSPV" field is a list of one or more ip addresses of a nSPV fullnode
 
 the JSON api is very simple and almost a direct mapping of the nSPV=1 rpc commands in the komodod, the testvectors

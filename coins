@@ -104,7 +104,7 @@
     "mm2": 1,
     "p2p": 25434,
     "magic":"f60d75fd",
-    "nSPV": "27.102.107.29, 27.102.107.28, 27.102.107.27"
+    "nSPV": "85.10.204.179, 159.69.45.70, 78.46.239.206, 78.47.11.6"
   },
     {
     "coin": "BTCH",
@@ -1762,6 +1762,13 @@
     "mm2": 1
   },
   {
+    "coin": "MORTY",
+    "asset": "MORTY",
+    "fname": "MORTY (TESTCOIN)",
+    "rpcport": 63812,
+    "mm2": 1 
+  },
+  {
     "coin": "ETH",
     "name": "ethereum",
     "fname": "Ethereum",
@@ -2039,20 +2046,6 @@
     "asset": "BEER",
     "fname": "BEER (TESTCOIN)",
     "rpcport": 8923,
-    "mm2": 1
-  },
-  {
-    "coin": "RICK",
-    "asset": "RICK",
-    "fname": "RICK (TESTCOIN)",
-    "rpcport": 28223,
-    "mm2": 1
-  },
-  {
-    "coin": "MORTY",
-    "asset": "MORTY",
-    "fname": "MORTY (TESTCOIN)",
-    "rpcport": 63812,
     "mm2": 1
   },
   {

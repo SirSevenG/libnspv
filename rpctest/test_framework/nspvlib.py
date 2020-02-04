@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# Copyright (c) 2019 SuperNET developers
+# Distributed under the MIT software license, see the accompanying
+# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
 import requests
 import json
 import ast
@@ -54,7 +58,8 @@ class NspvRpcCalls:
         """ assert there is an error with known error message """
         error_msg = ['no height', 'invalid height range', 'invalid method', 'timeout', 'error', 'no hex',
                      'couldnt get addressutxos', 'invalid address or amount too small', 'not enough funds',
-                     'invalid address or amount too small', 'invalid utxo', 'wif expired']
+                     'invalid address or amount too small', 'invalid utxo', 'wif expired', 'not implemented yet',
+                     'invalid utxo']
         result_d = self.type_convert(result)
         error = result_d.get('error')
         if error:
@@ -219,6 +224,26 @@ class NspvRpcCalls:
                   'method': 'txproof'}
         if txid:
             params.update({'txid': txid})
+        if height:
+            params.update({'height': height})
+        r = requests.post(self.node_ip, json=params)
+        time.sleep(1)
+        return r.content
+
+    def nspv_faucetget(self):
+        params = {'userpass': self.user_pass,
+                  'method': 'faucetget'}
+        r = requests.post(self.node_ip, json=params)
+        time.sleep(1)
+        return r.content
+
+    def nspv_gettransaction(self, hash="", vout="", height=""):
+        params = {'userpass': self.user_pass,
+                  'method': 'gettransaction'}
+        if hash:
+            params.update({'hash': hash})
+        if vout:
+            params.update({'vout': vout})
         if height:
             params.update({'height': height})
         r = requests.post(self.node_ip, json=params)

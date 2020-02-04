@@ -1,4 +1,1 @@
-{
-  "wif": "",
-  "address": ""
-}
+{"chain": "KMD", "wif": "mywif", "address": "myaddr"}
