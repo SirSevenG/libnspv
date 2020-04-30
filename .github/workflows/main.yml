@@ -10,6 +10,8 @@ on:
       - ./README.md
     tags-ignore:
       - '*.noci'
+  schedule:
+    - cron: '0 0 * * 1'
 
 jobs:
   job-build-linux:
