@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Install deps (Linux)
       env:
@@ -88,7 +88,7 @@ jobs:
     needs: job-build-linux
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Download nspv binary (Linux)
       uses: actions/download-artifact@v1
       with:
@@ -123,7 +123,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Build (MacOS)
       run: |
@@ -179,7 +179,7 @@ jobs:
     needs: job-macos-build
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Download nspv binary (MacOS)
         uses: actions/download-artifact@v1
         with:
@@ -207,7 +207,7 @@ jobs:
     runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Build Win on Unix
         env:
           DEBIAN_FRONTEND: noninteractive
@@ -255,12 +255,13 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Win Tests
         uses: actions/download-artifact@v1
         with:
           name: nspv-win
-      - shell: cmd
+      - name: Run Tests (Win)
+        shell: cmd
         env:
           WALL: ${{ secrets.WALL }}
           ADDRESS: ${{ secrets.ADDRESS }}
