@@ -106,9 +106,7 @@ def test_check_balance():
     call.nspv_login(wif_real)
     res = call.type_convert(call.nspv_listunspent())
     amount = res.get("balance")
-    if amount > 0.1:
-        pass
-    else:
+    if amount < 0.1:
         pytest.exit("Not enough balance, please use another wif")
 
 
@@ -343,11 +341,6 @@ def test_spentinfo_call():
     vout_resp = rep.get("vout")
     if r_vouts[1] != vout_resp:
         raise AssertionError("Unxepected vout: ", r_vouts[1], vout_resp)
-
-
-def test_faucetinfo():
-    """Not implemented call yet"""
-    return True
 
 
 def test_gettransaction():
