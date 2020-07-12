@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 SuperNET developers
+# Copyright (c) 2020 SuperNET developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.nspvlib import NspvRpcCalls as NRC
 import pytest
 import time
-import json
 import os
 
 """
-   Simple unittest based ob pytest framework for libnspv
+   Simple unittest based on pytest framework for libnspv
    Make sure you have installed framework: pip3 install pytest
    Set wif to spend form and address to spend to as json in test_setup.txt file
    Default coin is ILN
@@ -22,11 +21,6 @@ import os
 def setup_module():
     global addr_send, wif_real, coin, call, chain_params
 
-    #f = open("test_setup.txt", "r")
-    #test_setup = json.load(f)
-    #f.close()
-
-    # wif_real = test_setup.get("wif")
     wif_real = os.environ.get('WALL')
     addr_send = os.environ.get('ADDRESS')
     coin = os.environ.get('CHAIN')
@@ -34,47 +28,50 @@ def setup_module():
     if not addr_send or not wif_real:
         pytest.exit("Please check test wif and address variables availability")
 
-    chain_params = {"KMD": {
+    chain_params = {
+                    "KMD": {
                             'tx_list_address': 'RGShWG446Pv24CKzzxjA23obrzYwNbs1kA',
                             'min_chain_height': 1468080,
                             'notarization_height': '1468000',
-                            'prev_notarization_h': 1467980,
-                            'next_notarization_h': 1468020,
                             'hdrs_proof_low': '1468100',
                             'hdrs_proof_high': '1468200',
                             'numhdrs_expected': 151,
                             'tx_proof_id': 'f7beb36a65bc5bcbc9c8f398345aab7948160493955eb4a1f05da08c4ac3784f',
                             'tx_spent_height': 1456212,
-                            'tx_proof_height': '1468520',
                             'port': '7771',
                            },
                     "ILN": {
                             'tx_list_address': 'RUp3xudmdTtxvaRnt3oq78FJBjotXy55uu',
                             'min_chain_height': 3689,
                             'notarization_height': '2000',
-                            'prev_notarization_h': 1998,
-                            'next_notarization_h': 2008,
                             'hdrs_proof_low': '2000',
                             'hdrs_proof_high': '2100',
                             'numhdrs_expected': 113,
                             'tx_proof_id': '67ffe0eaecd6081de04675c492a59090b573ee78955c4e8a85b8ac0be0e8e418',
                             'tx_spent_height': 2681,
-                            'tx_proof_height': '2690',
                             'port': '12986',
                            },
                     "HUSH": {
                              'tx_list_address': 'RCNp322uAXmNo37ipQAEjcGQgBXY9EW9yv',
                              'min_chain_height': 69951,
                              'notarization_height': '69900',
-                             'prev_notarization_h': 69800,
-                             'next_notarization_h': 69700,
                              'hdrs_proof_low': '66100',
                              'hdrs_proof_high': '66200',
                              'numhdrs_expected': 123,
                              'tx_proof_id': '661bae364443948a009fa7f706c3c8b7d3fa6b0b27eca185b075abbe85bbdedc',
                              'tx_spent_height': 2681,
-                             'tx_proof_height': '2690',
                              'port': '18031'
+                            },
+                    "RICK": {
+                             'tx_list_address': 'RFNGdjCCApFfqUY8yWrvS9NG8QLrKFkM7K',
+                             'min_chain_height': 495000,
+                             'notarization_height': '435000',
+                             'hdrs_proof_low': '495337',
+                             'hdrs_proof_high': '495390',
+                             'numhdrs_expected': 77,
+                             'tx_proof_id': 'ac891ff08f952398ff544e12960dad254b1e628ce915b8185386151bd7782259',
+                             'tx_spent_height': 495327,
+                             'port': '25435'
                             }
                     }
     userpass = "userpass"
