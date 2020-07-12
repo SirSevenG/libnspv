@@ -22,7 +22,7 @@ def main():
     else:
         print("nspv is running")
     time.sleep(25)
-    subprocess.Popen(command2, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    subprocess.Popen(command2, shell=True).wait()
 
 
 if __name__ == "__main__":
