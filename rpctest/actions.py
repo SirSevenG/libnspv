@@ -17,13 +17,11 @@ def main():
 
     # os deps:
     if os.name == 'posix':
+        command1 = ["./nspv", coin]
+        command2 = ["/usr/local/bin/python3", "-m", "pytest", "./rpctest/test_nspv.py", "-s"]
         if sys.platform == 'linux':
             command1 = ["./nspv", coin]
             command2 = ["/usr/bin/python3", "-m", "pytest", "./rpctest/test_nspv.py", "-s"]
-        else:
-            command1 = ["./nspv", coin]
-            command2 = ["/usr/local/bin/python3", "-m", "pytest", "./rpctest/test_nspv.py", "-s"]
-
 
     nspv = subprocess.Popen(command1, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     if nspv.poll():
