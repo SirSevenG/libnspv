@@ -116,7 +116,8 @@ jobs:
         mv nspv-linux/nspv-linux.tar.gz .
         tar xzvf nspv-linux.tar.gz
         chmod +x ./rpctest/action.sh
-        ./rpctest/action.sh
+        cd rpctest
+        ./action.sh
 
 
   job-macos-build:
@@ -202,7 +203,8 @@ jobs:
           mv nspv-macos/nspv-macos.tar.gz .
           tar xzvf nspv-macos.tar.gz
           chmod +x ./rpctest/action.sh
-          ./rpctest/action.sh
+          cd rpctest
+          ./action.sh
 
   job-win-build:
     name: Build (Win)
