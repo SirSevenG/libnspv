@@ -22,16 +22,7 @@ def main():
     else:
         print("nspv is running")
     time.sleep(25)
-    test = subprocess.Popen(command2, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-    while True:
-        output = test.stdout.readline()
-        if test.poll() is not None:
-            break
-        if output:
-            print(output.strip().decode("utf-8"))
-    rc = test.poll()
-    if rc != 0:
-        raise RuntimeError("tests return code: ", rc)
+    subprocess.Popen(command2, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
 
 if __name__ == "__main__":
