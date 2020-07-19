@@ -25,7 +25,10 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
+        sudo apt-get update  # prevents repo404 errors
+        sudo apt-get remove php* msodbcsql17 mysql*
         sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get upgrade -y
         sudo apt-get install -q \
                  libsodium-dev \
                  curl \

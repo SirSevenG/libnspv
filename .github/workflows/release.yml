@@ -216,7 +216,10 @@ jobs:
           DEBIAN_FRONTEND: noninteractive
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get update  # prevents repo404 errors
+          sudo apt-get remove php* msodbcsql17 mysql*
           sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get upgrade -y
           sudo apt-get -y install -q \
                    build-essential \
                    pkg-config \
