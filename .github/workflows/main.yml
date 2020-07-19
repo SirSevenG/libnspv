@@ -212,11 +212,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Get depth
+      - name: Get deps
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
+          sudo apt-get update  # prevents repo404 errors
+          sudo apt-get remove php* msodbcsql17 mysql*
           sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get upgrade -y
           sudo apt-get -y install -q \
                    build-essential \
                    pkg-config \
@@ -246,9 +249,8 @@ jobs:
           cd ..
           git clone https://github.com/mirror/mingw-w64.git --single-branch --branch master
           cd mingw-w64/mingw-w64-libraries/winpthreads/
-          ./configure --host=x86_64-w64-mingw32 --enable-static  --enable-targets=all
+          ./configure --host=x86_64-w64-mingw32 --enable-static
           make
-          echo ${GITHUB_WORKSPACE}
           cp .libs/libwinpthread-1.dll ${GITHUB_WORKSPACE}
 
       - name: Build Win (mingw)
