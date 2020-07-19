@@ -4,6 +4,7 @@
 # file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 import pytest
+from pycurl import error as pycurlerr
 from test_framework.nspvlib import prepare_proxy_connection
 import os
 
@@ -69,7 +70,10 @@ def proxy_connection():
 
     print("\nStopping background nspv process")
     for each in connected:
-        each.stop()
+        try:
+            each.stop()
+        except pycurlerr as e:
+            print("Error: ", e)
 
 
 @pytest.fixture(scope='session')

@@ -45,3 +45,5 @@ libbtc.pc
 *.gcno
 .idea/workspace.xml
 .idea/
+*.pyc
+cache
