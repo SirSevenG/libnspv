@@ -212,10 +212,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Build Win on Unix
+      - name: Get depth
         env:
           DEBIAN_FRONTEND: noninteractive
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get -y install -q \
@@ -244,9 +243,19 @@ jobs:
                    libsodium23 \
                    libsodium-dev \
                    libgnutls28-dev -y
+          cd ..
+          git clone https://github.com/mirror/mingw-w64.git --single-branch --branch master
+          cd mingw-w64/mingw-w64-libraries/winpthreads/
+          ./configure --host=x86_64-w64-mingw32 --enable-static  --enable-targets=all
+          make
+          echo ${GITHUB_WORKSPACE}
+          cp .libs/libwinpthread-1.dll ${GITHUB_WORKSPACE}
+
+      - name: Build Win (mingw)
+        run: |
           ./build_win.sh
-          curl https://sirseven.me/share/libwinpthread-1.dll -o libwinpthread-1.dll
           zip --junk-paths nspv-win nspv.exe coins libwinpthread-1.dll
+
       - name: Upload nspv-win.zip as artifact
         uses: actions/upload-artifact@v1
         with:
