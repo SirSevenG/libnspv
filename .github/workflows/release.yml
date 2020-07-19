@@ -15,13 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Install deps (Linux)
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
+        sudo apt-get update  # prevents repo404 errors
+        sudo apt-get remove php* msodbcsql17 mysql*
         sudo apt-get update
+        sudo ACCEPT_EULA=Y apt-get upgrade -y
         sudo apt-get install -q \
                  libsodium-dev \
                  curl \
@@ -86,9 +89,9 @@ jobs:
     needs: job-build-linux
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
     - name: Download nspv binary (Linux)
-      uses: actions/download-artifact@v1
+      uses: actions/download-artifact@v2
       with:
         name: nspv-linux
     - name: Install deps (Linux)
@@ -111,9 +114,10 @@ jobs:
         ADDRESS: ${{ secrets.ADDRESS }}
         CHAIN: ${{ secrets.CHAIN }}
       run: |
-        mv nspv-linux/nspv-linux.tar.gz .
         tar xzvf nspv-linux.tar.gz
-        python3 ./rpctest/actions.py
+        chmod +x ./rpctest/action.sh
+        cd rpctest
+        ./action.sh
 
 
   job-macos-build:
@@ -121,7 +125,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
 
     - name: Build (MacOS)
       run: |
@@ -177,9 +181,9 @@ jobs:
     needs: job-macos-build
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Download nspv binary (MacOS)
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: nspv-macos
 
@@ -192,26 +196,30 @@ jobs:
 
       - name: Tests (MacOS)
         env:
-          WALL: ${{ secrets.WALL }}
-          ADDRESS: ${{ secrets.ADDRESS }}
+          WALL: ${{ secrets.WALL1 }}
+          ADDRESS: ${{ secrets.ADDRESS1 }}
           CHAIN: ${{ secrets.CHAIN }}
         run: |
-          mv nspv-macos/nspv-macos.tar.gz .
           tar xzvf nspv-macos.tar.gz
-          python3 ./rpctest/actions.py
+          chmod +x ./rpctest/action.sh
+          cd rpctest
+          ./action.sh
 
   job-win-build:
     name: Build (Win)
     runs-on: ubuntu-18.04
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Build Win on Unix
         env:
           DEBIAN_FRONTEND: noninteractive
         if: runner.os == 'Linux'
         run: |
+          sudo apt-get update  # prevents repo404 errors
+          sudo apt-get remove php* msodbcsql17 mysql*
           sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get upgrade -y
           sudo apt-get -y install -q \
                    build-essential \
                    pkg-config \
@@ -239,7 +247,6 @@ jobs:
                    libsodium-dev \
                    libgnutls28-dev -y
           ./build_win.sh
-          curl https://sirseven.me/share/libwinpthread-1.dll -o libwinpthread-1.dll
           zip --junk-paths nspv-win nspv.exe coins libwinpthread-1.dll
       - name: Upload nspv-win.zip as artifact
         uses: actions/upload-artifact@v1
@@ -253,18 +260,18 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v1
-      - name: Win Tests
-        uses: actions/download-artifact@v1
+      - uses: actions/checkout@v2
+      - name: Get nspv artifact
+        uses: actions/download-artifact@v2
         with:
           name: nspv-win
-      - shell: cmd
+      - name: Win Tests
+        shell: cmd
         env:
-          WALL: ${{ secrets.WALL }}
-          ADDRESS: ${{ secrets.ADDRESS }}
+          WALL: ${{ secrets.WALL2 }}
+          ADDRESS: ${{ secrets.ADDRESS2 }}
           CHAIN: ${{ secrets.CHAIN }}
         run: |
-          move nspv-win\nspv-win.zip
           7z e nspv-win.zip
           python.exe -m pip install --upgrade setuptools
           python.exe -m pip install --upgrade pip
@@ -278,15 +285,15 @@ jobs:
 
     steps:
       - name: Download Artifacts (Linux)
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: nspv-linux
       - name: Download Artifacts (Win)
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: nspv-win
       - name: Download Artifacts (MacOS)
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           name: nspv-macos
       - name: Prepare Archives
