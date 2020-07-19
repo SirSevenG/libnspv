@@ -196,8 +196,8 @@ jobs:
 
       - name: Tests (MacOS)
         env:
-          WALL: ${{ secrets.WALL }}
-          ADDRESS: ${{ secrets.ADDRESS }}
+          WALL: ${{ secrets.WALL1 }}
+          ADDRESS: ${{ secrets.ADDRESS1 }}
           CHAIN: ${{ secrets.CHAIN }}
         run: |
           tar xzvf nspv-macos.tar.gz
@@ -268,8 +268,8 @@ jobs:
       - name: Win Tests
         shell: cmd
         env:
-          WALL: ${{ secrets.WALL }}
-          ADDRESS: ${{ secrets.ADDRESS }}
+          WALL: ${{ secrets.WALL2 }}
+          ADDRESS: ${{ secrets.ADDRESS2 }}
           CHAIN: ${{ secrets.CHAIN }}
         run: |
           7z e nspv-win.zip
