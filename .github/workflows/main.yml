@@ -116,7 +116,9 @@ jobs:
         CHAIN: ${{ secrets.CHAIN }}
       run: |
         tar xzvf nspv-linux.tar.gz
-        python3 ./rpctest/actions.py
+        chmod +x ./rpctest/action.sh
+        cd rpctest
+        ./actions.sh
 
 
   job-macos-build:
@@ -200,7 +202,9 @@ jobs:
           CHAIN: ${{ secrets.CHAIN }}
         run: |
           tar xzvf nspv-macos.tar.gz
-          python3 ./rpctest/actions.py
+          chmod +x ./rpctest/action.sh
+          cd rpctest
+          ./actions.sh
 
   job-win-build:
     name: Build (Win)

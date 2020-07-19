@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (c) 2019 SuperNET developers
+# Copyright (c) 2020 SuperNET developers
 # Distributed under the MIT software license, see the accompanying
-# file COPYING or http://www.opensource.org/licenses/mit-license.php.
+# file COPYING or https://www.opensource.org/licenses/mit-license.php.
 
 import subprocess
 import time
 import os
 import sys
-import requests
-from pathlib import Path
+
 
 def main():
     coin = os.environ.get('CHAIN')
@@ -23,7 +22,6 @@ def main():
         else:
             command1 = ["./nspv", coin]
             command2 = ["/usr/local/bin/python3", "-m", "pytest", "./rpctest/test_nspv.py", "-s"]
-
 
     nspv = subprocess.Popen(command1, shell=False, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
     if nspv.poll():
