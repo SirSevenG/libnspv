@@ -296,11 +296,6 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: nspv-macos
-      - name: Prepare Archives
-        run: |
-          mv nspv-linux/nspv-linux.tar.gz .
-          mv nspv-win/nspv-win.zip .
-          mv nspv-macos/nspv-macos.tar.gz .
 
       - name: Generate build number  # gen ${{ steps.buildnumber.outputs.build_number }} for release name
         id: buildnumber
@@ -317,7 +312,7 @@ jobs:
           tag_name: ${{ steps.buildnumber.outputs.build_number }}
           release_name: Build - ${{ github.sha }}
           draft: false
-          prerelease: false
+          prerelease: true
 
       - name: Upload Release Asset (Linux)
         id: upload-release-asset-linux
