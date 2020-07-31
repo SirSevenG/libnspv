@@ -350,7 +350,9 @@ def test_spentinfo_call():
 
 def test_faucetinfo():
     """Not implemented call yet"""
-    return True
+    print('\n', "testing faucetget call")
+    rpc_call = call.nspv_faucetget()
+    call.assert_error(rpc_call)
 
 
 def test_gettransaction():
